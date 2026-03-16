@@ -1,0 +1,10 @@
+node_modules/
+dist/
+backend/dist/
+.angular/
+.env
+*.log
+.DS_Store
+coverage/
+tmp/
+package-lock.json
