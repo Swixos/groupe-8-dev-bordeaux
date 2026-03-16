@@ -8,3 +8,4 @@ backend/dist/
 coverage/
 tmp/
 package-lock.json
+*.tsbuildinfo
