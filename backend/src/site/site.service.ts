@@ -45,14 +45,14 @@ export class SiteService {
 
   async findAll(): Promise<Site[]> {
     return this.siteRepository.find({
-      relations: ['user', 'materials', 'carbonRecords'],
+      relations: ['materials', 'carbonRecords'],
     });
   }
 
   async findOne(id: number): Promise<Site> {
     const site = await this.siteRepository.findOne({
       where: { id },
-      relations: ['user', 'materials', 'carbonRecords'],
+      relations: ['materials', 'carbonRecords'],
     });
 
     if (!site) {
@@ -66,6 +66,7 @@ export class SiteService {
     return this.siteRepository.find({
       where: { userId },
       relations: ['materials', 'carbonRecords'],
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -112,7 +113,7 @@ export class SiteService {
     await this.siteRepository.remove(site);
   }
 
-  async compareSites(ids: number[]): Promise<Site[]> {
+  async compareSites(ids: number[]): Promise<any[]> {
     const sites = await this.siteRepository.find({
       where: { id: In(ids) },
       relations: ['materials', 'carbonRecords'],
@@ -122,6 +123,23 @@ export class SiteService {
       throw new NotFoundException('No sites found with the given IDs');
     }
 
-    return sites;
+    return sites.map((site) => {
+      const latest = site.carbonRecords?.sort(
+        (a, b) =>
+          new Date(b.calculatedAt).getTime() -
+          new Date(a.calculatedAt).getTime(),
+      )[0];
+      return {
+        siteId: site.id,
+        siteName: site.name,
+        totalCo2: latest ? latest.totalEmissions / 1000 : 0,
+        constructionCo2: latest ? latest.constructionEmissions / 1000 : 0,
+        exploitationCo2: latest ? latest.exploitationEmissions / 1000 : 0,
+        co2PerSquareMeter: latest?.emissionsPerSqm || 0,
+        co2PerEmployee: latest?.emissionsPerEmployee || 0,
+        surfaceArea: site.surfaceArea,
+        employeeCount: site.employeeCount,
+      };
+    });
   }
 }

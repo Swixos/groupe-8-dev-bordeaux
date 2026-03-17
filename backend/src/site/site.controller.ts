@@ -27,8 +27,8 @@ export class SiteController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async findAll() {
-    return this.siteService.findAll();
+  async findAll(@Request() req: any) {
+    return this.siteService.findByUser(req.user.userId);
   }
 
   @Get('user')
