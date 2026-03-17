@@ -25,8 +25,8 @@ import { AuthService } from '../../services/auth.service';
           <p class="auth-subtitle">Connectez-vous pour suivre votre empreinte carbone</p>
         </div>
 
-        <div class="error-msg" *ngIf="error">
-          <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:8px">error_outline</span>
+        <div class="error-msg" *ngIf="error" style="display:flex;align-items:center;gap:8px">
+          <span class="material-icons-round" style="font-size:18px;flex-shrink:0">error_outline</span>
           {{ error }}
         </div>
 

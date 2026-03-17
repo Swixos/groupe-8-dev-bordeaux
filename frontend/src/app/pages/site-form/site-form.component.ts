@@ -135,10 +135,8 @@ import { SiteMaterial } from '../../models/site.model';
           <div class="form-actions animate-slide-up" style="animation-delay:0.4s">
             <button type="submit" class="btn btn-primary btn-lg" [disabled]="submitting">
               <div class="spinner spinner-sm" *ngIf="submitting"></div>
-              <span *ngIf="!submitting">
-                <span class="material-icons-round">calculate</span>
-                Créer et calculer l'empreinte
-              </span>
+              <span class="material-icons-round" *ngIf="!submitting">calculate</span>
+              <span *ngIf="!submitting">Créer et calculer l'empreinte</span>
             </button>
           </div>
         </form>
@@ -248,15 +246,9 @@ export class SiteFormComponent {
     { value: 'VERRE', label: 'Verre' },
     { value: 'ALUMINIUM', label: 'Aluminium' },
     { value: 'CUIVRE', label: 'Cuivre' },
-    { value: 'PVC', label: 'PVC' },
-    { value: 'LAINE_DE_VERRE', label: 'Laine de verre' },
-    { value: 'POLYSTYRENE', label: 'Polystyrène' },
-    { value: 'BRIQUE', label: 'Brique' },
-    { value: 'PIERRE', label: 'Pierre' },
-    { value: 'PLATRE', label: 'Plâtre' },
-    { value: 'ZINC', label: 'Zinc' },
-    { value: 'ARDOISE', label: 'Ardoise' },
-    { value: 'TERRE_CUITE', label: 'Terre cuite' }
+    { value: 'PLASTIQUE', label: 'Plastique' },
+    { value: 'LAINE_VERRE', label: 'Laine de verre' },
+    { value: 'BRIQUE', label: 'Brique' }
   ];
 
   constructor(private siteService: SiteService, private router: Router) {}

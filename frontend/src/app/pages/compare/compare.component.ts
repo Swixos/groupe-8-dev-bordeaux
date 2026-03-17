@@ -43,10 +43,8 @@ import { Site, CompareResult } from '../../models/site.model';
           <button class="btn btn-primary" (click)="compare()"
                   [disabled]="selectedIds.size < 2 || comparing" style="margin-top:20px">
             <div class="spinner spinner-sm" *ngIf="comparing"></div>
-            <span *ngIf="!comparing">
-              <span class="material-icons-round">compare_arrows</span>
-              Comparer ({{ selectedIds.size }} sites)
-            </span>
+            <span class="material-icons-round" *ngIf="!comparing">compare_arrows</span>
+            <span *ngIf="!comparing">Comparer ({{ selectedIds.size }} sites)</span>
           </button>
         </div>
 

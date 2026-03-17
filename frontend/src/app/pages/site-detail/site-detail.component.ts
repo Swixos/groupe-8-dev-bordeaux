@@ -40,12 +40,12 @@ import { Site, SiteHistory } from '../../models/site.model';
             <div class="header-actions">
               <button class="btn btn-primary" (click)="recalculate()" [disabled]="calculating">
                 <div class="spinner spinner-sm" *ngIf="calculating"></div>
-                <span *ngIf="!calculating">
-                  <span class="material-icons-round">refresh</span> Recalculer
-                </span>
+                <span class="material-icons-round" *ngIf="!calculating">refresh</span>
+                <span *ngIf="!calculating">Recalculer</span>
               </button>
               <button class="btn btn-danger" (click)="deleteSite()">
-                <span class="material-icons-round">delete</span> Supprimer
+                <span class="material-icons-round">delete</span>
+                <span>Supprimer</span>
               </button>
             </div>
           </div>
