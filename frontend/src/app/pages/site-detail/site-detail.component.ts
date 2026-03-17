@@ -296,10 +296,15 @@ export class SiteDetailComponent implements OnInit {
     this.siteService.getById(this.siteId).subscribe({
       next: (site) => {
         this.site = site;
-        this.buildPieChart();
         this.loading = false;
+        try {
+          this.buildPieChart();
+        } catch (e) {
+          console.error('Site detail chart error:', e);
+        }
       },
-      error: () => {
+      error: (err) => {
+        console.error('Site load error:', err);
         this.loading = false;
         this.router.navigate(['/dashboard']);
       }

@@ -343,11 +343,16 @@ export class DashboardComponent implements OnInit {
     this.siteService.getAll().subscribe({
       next: (sites) => {
         this.sites = sites;
-        this.computeKpis();
-        this.buildCharts();
         this.loading = false;
+        try {
+          this.computeKpis();
+          this.buildCharts();
+        } catch (e) {
+          console.error('Dashboard data processing error:', e);
+        }
       },
-      error: () => {
+      error: (err) => {
+        console.error('Dashboard load error:', err);
         this.loading = false;
       }
     });
