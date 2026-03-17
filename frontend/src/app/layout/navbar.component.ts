@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -15,7 +16,14 @@ import { AuthService } from '../services/auth.service';
           <span class="brand-text">Carbon<span class="brand-accent">Track</span></span>
         </a>
 
-        <div class="nav-links">
+        <!-- Hamburger button (mobile) -->
+        <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-links" [class.mobile-open]="menuOpen">
           <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
             <span class="material-icons-round">dashboard</span>
             <span>Dashboard</span>
@@ -28,6 +36,15 @@ import { AuthService } from '../services/auth.service';
             <span class="material-icons-round">compare_arrows</span>
             <span>Comparer</span>
           </a>
+          <a routerLink="/reference-data" routerLinkActive="active" class="nav-link">
+            <span class="material-icons-round">science</span>
+            <span>Références</span>
+          </a>
+          <!-- Logout inside mobile menu -->
+          <button class="nav-link mobile-logout" (click)="logout()">
+            <span class="material-icons-round">logout</span>
+            <span>Déconnexion</span>
+          </button>
         </div>
 
         <div class="nav-user">
@@ -41,6 +58,9 @@ import { AuthService } from '../services/auth.service';
         </div>
       </div>
     </nav>
+
+    <!-- Overlay (mobile) -->
+    <div class="mobile-overlay" *ngIf="menuOpen" (click)="toggleMenu()"></div>
   `,
   styles: [`
     .navbar {
@@ -71,6 +91,7 @@ import { AuthService } from '../services/auth.service';
       gap: 10px;
       text-decoration: none;
       color: var(--text-primary);
+      z-index: 1002;
     }
     .brand-icon {
       font-size: 28px;
@@ -101,6 +122,10 @@ import { AuthService } from '../services/auth.service';
       font-size: 0.9rem;
       font-weight: 500;
       transition: all 0.3s ease;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-family);
     }
     .nav-link .material-icons-round {
       font-size: 20px;
@@ -113,6 +138,7 @@ import { AuthService } from '../services/auth.service';
       color: var(--accent);
       background: rgba(16, 185, 129, 0.1);
     }
+    .mobile-logout { display: none; }
     .nav-user {
       display: flex;
       align-items: center;
@@ -153,16 +179,112 @@ import { AuthService } from '../services/auth.service';
       border-color: rgba(239, 68, 68, 0.3);
       background: rgba(239, 68, 68, 0.05);
     }
+
+    /* Hamburger button */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      padding: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1002;
+    }
+    .hamburger span {
+      display: block;
+      width: 100%;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.open span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    /* Mobile overlay */
+    .mobile-overlay {
+      display: none;
+    }
+
+    /* Mobile styles */
     @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .logout-text { display: none; }
+      .hamburger {
+        display: flex;
+      }
+      .nav-links {
+        position: fixed;
+        top: 0;
+        right: -280px;
+        width: 280px;
+        height: 100vh;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: calc(var(--navbar-height) + 16px) 16px 16px;
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-left: 1px solid rgba(255, 255, 255, 0.06);
+        z-index: 1001;
+        transition: right 0.3s ease;
+      }
+      .nav-links.mobile-open {
+        right: 0;
+      }
+      .nav-link {
+        padding: 14px 16px;
+        font-size: 1rem;
+        border-radius: var(--radius-md);
+      }
+      .mobile-logout {
+        display: flex;
+        margin-top: auto;
+        color: var(--danger);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 16px;
+      }
+      .nav-user {
+        display: none;
+      }
+      .mobile-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
     }
   `]
 })
 export class NavbarComponent {
-  constructor(private authService: AuthService) {}
+  menuOpen = false;
+
+  constructor(private authService: AuthService, private router: Router) {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.menuOpen = false;
+    });
+  }
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
 
   logout() {
+    this.menuOpen = false;
     this.authService.logout();
   }
 }

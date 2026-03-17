@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { NavbarComponent } from '../../layout/navbar.component';
 import { KpiCardComponent } from '../../shared/kpi-card.component';
 import { SiteService } from '../../services/site.service';
 import { Site } from '../../models/site.model';
@@ -11,15 +10,14 @@ import { Site } from '../../models/site.model';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, BaseChartDirective, NavbarComponent, KpiCardComponent],
+  imports: [CommonModule, RouterModule, BaseChartDirective, KpiCardComponent],
   template: `
-    <app-navbar></app-navbar>
     <main class="page-content">
       <div class="container">
         <!-- Header -->
         <div class="page-header animate-slide-up">
           <div>
-            <h1 class="page-title">Tableau de bord</h1>
+            <h1 class="page-title">Tableau de <span class="text-accent">bord</span></h1>
             <p class="page-subtitle">Vue d'ensemble de votre empreinte carbone</p>
           </div>
           <a routerLink="/sites/new" class="btn btn-primary">
@@ -319,8 +317,7 @@ export class DashboardComponent implements OnInit {
     },
     scales: {
       x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-      y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.04)' },
-           stacked: true }
+      y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.04)' } }
     }
   };
 
@@ -333,7 +330,7 @@ export class DashboardComponent implements OnInit {
     }
   };
 
-  constructor(private siteService: SiteService) {}
+  constructor(private siteService: SiteService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadSites();
@@ -342,18 +339,22 @@ export class DashboardComponent implements OnInit {
   loadSites() {
     this.siteService.getAll().subscribe({
       next: (sites) => {
+        console.log('[Dashboard] Received sites:', sites.length, sites);
         this.sites = sites;
         this.loading = false;
+        this.cdr.detectChanges();
         try {
           this.computeKpis();
           this.buildCharts();
+          this.cdr.detectChanges();
         } catch (e) {
-          console.error('Dashboard data processing error:', e);
+          console.error('[Dashboard] data processing error:', e);
         }
       },
       error: (err) => {
-        console.error('Dashboard load error:', err);
+        console.error('[Dashboard] load error:', err);
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

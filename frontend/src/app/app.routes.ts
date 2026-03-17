@@ -22,6 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'sites/:id/edit',
+    loadComponent: () => import('./pages/site-form/site-form.component').then(m => m.SiteFormComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'sites/:id',
     loadComponent: () => import('./pages/site-detail/site-detail.component').then(m => m.SiteDetailComponent),
     canActivate: [authGuard]
@@ -29,6 +34,11 @@ export const routes: Routes = [
   {
     path: 'compare',
     loadComponent: () => import('./pages/compare/compare.component').then(m => m.CompareComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'reference-data',
+    loadComponent: () => import('./pages/reference-data/reference-data.component').then(m => m.ReferenceDataComponent),
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: '/dashboard' }

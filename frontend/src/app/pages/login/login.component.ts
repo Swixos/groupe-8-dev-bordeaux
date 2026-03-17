@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -187,15 +187,17 @@ export class LoginComponent {
   error = '';
   loading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   onLogin() {
     if (!this.username || !this.password) {
       this.error = 'Veuillez remplir tous les champs.';
+      this.cdr.detectChanges();
       return;
     }
     this.loading = true;
     this.error = '';
+    this.cdr.detectChanges();
     this.authService.login({ username: this.username, password: this.password }).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
@@ -203,6 +205,7 @@ export class LoginComponent {
       error: (err) => {
         this.loading = false;
         this.error = err.error?.message || 'Identifiants incorrects.';
+        this.cdr.detectChanges();
       }
     });
   }

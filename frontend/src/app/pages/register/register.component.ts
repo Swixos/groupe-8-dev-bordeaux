@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -208,23 +208,27 @@ export class RegisterComponent {
   error = '';
   loading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   onRegister() {
     if (!this.username || !this.email || !this.password || !this.confirmPassword) {
       this.error = 'Veuillez remplir tous les champs.';
+      this.cdr.detectChanges();
       return;
     }
     if (this.password !== this.confirmPassword) {
       this.error = 'Les mots de passe ne correspondent pas.';
+      this.cdr.detectChanges();
       return;
     }
     if (this.password.length < 6) {
       this.error = 'Le mot de passe doit contenir au moins 6 caractères.';
+      this.cdr.detectChanges();
       return;
     }
     this.loading = true;
     this.error = '';
+    this.cdr.detectChanges();
     this.authService.register({ username: this.username, email: this.email, password: this.password }).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
@@ -232,6 +236,7 @@ export class RegisterComponent {
       error: (err) => {
         this.loading = false;
         this.error = err.error?.message || "Erreur lors de l'inscription.";
+        this.cdr.detectChanges();
       }
     });
   }
