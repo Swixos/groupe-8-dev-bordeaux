@@ -1,18 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { NavbarComponent } from '../../layout/navbar.component';
 import { SiteService } from '../../services/site.service';
 import { Site, CompareResult } from '../../models/site.model';
 
 @Component({
   selector: 'app-compare',
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseChartDirective, NavbarComponent],
+  imports: [CommonModule, FormsModule, BaseChartDirective],
   template: `
-    <app-navbar></app-navbar>
     <main class="page-content">
       <div class="container">
         <div class="page-header animate-slide-up">
@@ -254,10 +252,16 @@ export class CompareComponent implements OnInit {
     }
   };
 
-  constructor(private siteService: SiteService) {}
+  constructor(private siteService: SiteService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.siteService.getAll().subscribe(sites => this.allSites = sites);
+    this.siteService.getAll().subscribe({
+      next: (sites) => {
+        this.allSites = sites;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Compare load error:', err)
+    });
   }
 
   toggleSite(id: number) {
@@ -266,18 +270,24 @@ export class CompareComponent implements OnInit {
     } else if (this.selectedIds.size < 4) {
       this.selectedIds.add(id);
     }
+    this.cdr.detectChanges();
   }
 
   compare() {
     this.comparing = true;
+    this.cdr.detectChanges();
     const ids = Array.from(this.selectedIds);
     this.siteService.compare(ids).subscribe({
       next: (results) => {
         this.results = results;
-        this.buildCharts();
+        try { this.buildCharts(); } catch (e) { console.error(e); }
         this.comparing = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.comparing = false; }
+      error: () => {
+        this.comparing = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

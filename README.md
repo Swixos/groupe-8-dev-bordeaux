@@ -6,7 +6,7 @@ Application fullstack permettant de calculer l'empreinte carbone d'un site physi
 
 | Composant | Technologie | Port |
 |-----------|------------|------|
-| Frontend | Angular 17 | 4200 |
+| Frontend | Angular 21 | 4200 |
 | Backend | NestJS + TypeORM | 3000 |
 | Base de données | PostgreSQL 16 | 5432 |
 

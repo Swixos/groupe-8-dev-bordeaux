@@ -1,19 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { NavbarComponent } from '../../layout/navbar.component';
 import { KpiCardComponent } from '../../shared/kpi-card.component';
 import { SiteService } from '../../services/site.service';
+import { ReferenceDataService } from '../../services/reference-data.service';
 import { Site, SiteHistory } from '../../models/site.model';
+import { ReferenceData, ReferenceCategory } from '../../models/reference-data.model';
 
 @Component({
   selector: 'app-site-detail',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, NavbarComponent, KpiCardComponent],
+  imports: [CommonModule, BaseChartDirective, KpiCardComponent],
   template: `
-    <app-navbar></app-navbar>
     <main class="page-content">
       <div class="container">
         <!-- Loading -->
@@ -38,6 +38,10 @@ import { Site, SiteHistory } from '../../models/site.model';
               </p>
             </div>
             <div class="header-actions">
+              <button class="btn btn-secondary" (click)="editSite()">
+                <span class="material-icons-round">edit</span>
+                <span>Modifier</span>
+              </button>
               <button class="btn btn-primary" (click)="recalculate()" [disabled]="calculating">
                 <div class="spinner spinner-sm" *ngIf="calculating"></div>
                 <span class="material-icons-round" *ngIf="!calculating">refresh</span>
@@ -116,6 +120,41 @@ import { Site, SiteHistory } from '../../models/site.model';
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Reference Data -->
+          <div class="table-section glass-card animate-slide-up" style="animation-delay:0.6s"
+               *ngIf="referenceCategories.length">
+            <h3 class="chart-title">
+              <span class="material-icons-round">eco</span>
+              Données de référence environnementales
+            </h3>
+            <div *ngFor="let cat of referenceCategories" class="ref-category">
+              <h4 class="ref-category-title">{{ cat.label }}</h4>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Indicateur</th>
+                      <th>Valeur</th>
+                      <th>Unité</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let ref of cat.items">
+                      <td>
+                        <div class="mat-cell">
+                          <span class="mat-dot"></span>
+                          {{ ref.label }}
+                        </div>
+                      </td>
+                      <td class="text-accent">{{ ref.value }}</td>
+                      <td class="text-muted">{{ ref.unit }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </ng-container>
@@ -201,7 +240,7 @@ import { Site, SiteHistory } from '../../models/site.model';
       position: relative;
       height: 280px;
     }
-    .table-section { padding: 24px; }
+    .table-section { padding: 24px; margin-top: 24px; }
     .table-wrapper { overflow-x: auto; }
     .data-table {
       width: 100%;
@@ -236,6 +275,21 @@ import { Site, SiteHistory } from '../../models/site.model';
       border-radius: 50%;
       background: var(--accent);
     }
+    .ref-category {
+      margin-bottom: 24px;
+    }
+    .ref-category:last-child {
+      margin-bottom: 0;
+    }
+    .ref-category-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
     @media (max-width: 1200px) {
       .kpi-grid { grid-template-columns: repeat(3, 1fr); }
     }
@@ -251,6 +305,7 @@ export class SiteDetailComponent implements OnInit {
   loading = true;
   calculating = false;
   history: SiteHistory[] = [];
+  referenceCategories: ReferenceCategory[] = [];
 
   pieChartData: ChartData<'pie'> = { labels: [], datasets: [] };
   pieChartOptions: ChartConfiguration<'pie'>['options'] = {
@@ -276,20 +331,36 @@ export class SiteDetailComponent implements OnInit {
 
   private siteId!: number;
 
+  private readonly categoryLabels: Record<string, string> = {
+    energie: 'Énergie',
+    ressources: 'Ressources',
+    materiaux: 'Matériaux',
+    compensation: 'Compensation',
+    transport: 'Transport',
+    numerique: 'Numérique'
+  };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private siteService: SiteService
+    private siteService: SiteService,
+    private referenceDataService: ReferenceDataService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.siteId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadSite();
     this.loadHistory();
+    this.loadReferenceData();
   }
 
   goBack() {
     this.router.navigate(['/dashboard']);
+  }
+
+  editSite() {
+    this.router.navigate(['/sites', this.siteId, 'edit']);
   }
 
   loadSite() {
@@ -297,8 +368,10 @@ export class SiteDetailComponent implements OnInit {
       next: (site) => {
         this.site = site;
         this.loading = false;
+        this.cdr.detectChanges();
         try {
           this.buildPieChart();
+          this.cdr.detectChanges();
         } catch (e) {
           console.error('Site detail chart error:', e);
         }
@@ -306,6 +379,7 @@ export class SiteDetailComponent implements OnInit {
       error: (err) => {
         console.error('Site load error:', err);
         this.loading = false;
+        this.cdr.detectChanges();
         this.router.navigate(['/dashboard']);
       }
     });
@@ -315,7 +389,12 @@ export class SiteDetailComponent implements OnInit {
     this.siteService.getHistory(this.siteId).subscribe({
       next: (history) => {
         this.history = history;
-        this.buildHistoryChart();
+        try {
+          this.buildHistoryChart();
+          this.cdr.detectChanges();
+        } catch (e) {
+          console.error('History chart error:', e);
+        }
       },
       error: () => {}
     });
@@ -323,13 +402,18 @@ export class SiteDetailComponent implements OnInit {
 
   recalculate() {
     this.calculating = true;
+    this.cdr.detectChanges();
     this.siteService.calculate(this.siteId).subscribe({
       next: (result) => {
         if (this.site) this.site.carbonResult = result;
-        this.buildPieChart();
+        try { this.buildPieChart(); } catch (e) { console.error(e); }
         this.calculating = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.calculating = false; }
+      error: () => {
+        this.calculating = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -340,6 +424,26 @@ export class SiteDetailComponent implements OnInit {
         error: () => {}
       });
     }
+  }
+
+  loadReferenceData() {
+    this.referenceDataService.getAll().subscribe({
+      next: (data) => {
+        const grouped = new Map<string, ReferenceData[]>();
+        for (const item of data) {
+          const list = grouped.get(item.category) || [];
+          list.push(item);
+          grouped.set(item.category, list);
+        }
+        this.referenceCategories = Array.from(grouped.entries()).map(([key, items]) => ({
+          key,
+          label: this.categoryLabels[key] || key,
+          items
+        }));
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
   }
 
   private buildPieChart() {

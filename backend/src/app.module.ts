@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { SiteModule } from './site/site.module';
 import { CarbonModule } from './carbon/carbon.module';
+import { ReferenceModule } from './reference/reference.module';
 
 const isTestOrSqlite = process.env.DB_TYPE === 'sqlite';
 
@@ -31,6 +32,7 @@ const isTestOrSqlite = process.env.DB_TYPE === 'sqlite';
     AuthModule,
     SiteModule,
     CarbonModule,
+    ReferenceModule,
   ],
   controllers: [AppController],
 })

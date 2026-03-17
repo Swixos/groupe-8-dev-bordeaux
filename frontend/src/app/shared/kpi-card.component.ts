@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -95,7 +95,7 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class KpiCardComponent implements OnInit {
+export class KpiCardComponent implements OnInit, OnChanges {
   @Input() icon = 'info';
   @Input() label = '';
   @Input() value: number = 0;
@@ -106,8 +106,16 @@ export class KpiCardComponent implements OnInit {
 
   displayValue = '0';
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit() {
-    this.animateValue(0, this.value, 1200);
+    this.animateValue(0, this.value || 0, 1200);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['value'] && !changes['value'].firstChange) {
+      this.animateValue(0, this.value || 0, 1200);
+    }
   }
 
   private animateValue(start: number, end: number, duration: number) {
@@ -122,6 +130,7 @@ export class KpiCardComponent implements OnInit {
       } else {
         this.displayValue = current.toFixed(end % 1 !== 0 ? 2 : 0);
       }
+      this.cdr.detectChanges();
       if (progress < 1) {
         requestAnimationFrame(animate);
       }

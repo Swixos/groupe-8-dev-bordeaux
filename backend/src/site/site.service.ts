@@ -106,7 +106,13 @@ export class SiteService {
   }
 
   async remove(id: number, userId: number): Promise<void> {
-    const site = await this.findOne(id);
+    const site = await this.siteRepository.findOne({
+      where: { id },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with ID ${id} not found`);
+    }
 
     if (site.userId !== userId) {
       throw new ForbiddenException('You can only delete your own sites');
