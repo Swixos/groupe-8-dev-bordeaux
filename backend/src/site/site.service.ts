@@ -43,13 +43,14 @@ export class SiteService {
     return this.findOne(savedSite.id);
   }
 
-  async findAll(): Promise<Site[]> {
-    return this.siteRepository.find({
+  async findAll(): Promise<any[]> {
+    const sites = await this.siteRepository.find({
       relations: ['materials', 'carbonRecords'],
     });
+    return sites.map((s) => this.serialize(s));
   }
 
-  async findOne(id: number): Promise<Site> {
+  async findOne(id: number): Promise<any> {
     const site = await this.siteRepository.findOne({
       where: { id },
       relations: ['materials', 'carbonRecords'],
@@ -59,15 +60,16 @@ export class SiteService {
       throw new NotFoundException(`Site with ID ${id} not found`);
     }
 
-    return site;
+    return this.serialize(site);
   }
 
-  async findByUser(userId: number): Promise<Site[]> {
-    return this.siteRepository.find({
+  async findByUser(userId: number): Promise<any[]> {
+    const sites = await this.siteRepository.find({
       where: { userId },
       relations: ['materials', 'carbonRecords'],
       order: { createdAt: 'DESC' },
     });
+    return sites.map((s) => this.serialize(s));
   }
 
   async update(
@@ -111,6 +113,41 @@ export class SiteService {
     }
 
     await this.siteRepository.remove(site);
+  }
+
+  private serialize(site: Site): any {
+    return {
+      id: site.id,
+      name: site.name,
+      address: site.address,
+      city: site.city,
+      country: site.country,
+      surfaceArea: site.surfaceArea,
+      parkingSpaces: site.parkingSpaces,
+      energyConsumption: site.energyConsumption,
+      employeeCount: site.employeeCount,
+      workstationCount: site.workstationCount,
+      createdAt: site.createdAt,
+      updatedAt: site.updatedAt,
+      userId: site.userId,
+      materials: (site.materials || []).map((m) => ({
+        id: m.id,
+        materialType: m.materialType,
+        quantity: m.quantity,
+        siteId: m.siteId,
+      })),
+      carbonRecords: (site.carbonRecords || []).map((r) => ({
+        id: r.id,
+        constructionEmissions: r.constructionEmissions,
+        exploitationEmissions: r.exploitationEmissions,
+        totalEmissions: r.totalEmissions,
+        emissionsPerSqm: r.emissionsPerSqm,
+        emissionsPerEmployee: r.emissionsPerEmployee,
+        year: r.year,
+        calculatedAt: r.calculatedAt,
+        siteId: r.siteId,
+      })),
+    };
   }
 
   async compareSites(ids: number[]): Promise<any[]> {

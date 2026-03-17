@@ -59,7 +59,6 @@ export class Site {
 
   @OneToMany(() => SiteMaterial, (material) => material.site, {
     cascade: true,
-    eager: true,
   })
   materials: SiteMaterial[];
 
